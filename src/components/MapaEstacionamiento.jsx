@@ -1,83 +1,144 @@
-
 // src/components/MapaEstacionamiento.jsx
-// Requiere: npm install leaflet react-leaflet
-// Y en tu index.html o main.jsx: import "leaflet/dist/leaflet.css";
-import React from "react";
-import { MapContainer, TileLayer, Rectangle, CircleMarker, Popup, Polygon } from "react-leaflet";
-import { PUNTOS, BOUNDING_BOX_GENERAL } from "../utils/geo";
+import React, { useEffect, useRef } from 'react';
 
-const CENTRO_MAPA = [
-  (PUNTOS.P1.lat + PUNTOS.P3.lat) / 2,
-  (PUNTOS.P1.lng + PUNTOS.P3.lng) / 2,
-];
+export default function MapaEstacionamiento({ espacios = [], espacioSeleccionado, onSelectEspacio }) {
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef({});
 
-const PERIMETRO = [
-  [PUNTOS.P1.lat, PUNTOS.P1.lng],
-  [PUNTOS.P2.lat, PUNTOS.P2.lng],
-  [PUNTOS.P3.lat, PUNTOS.P3.lng],
-  [PUNTOS.P4.lat, PUNTOS.P4.lng],
-];
+  useEffect(() => {
+    // 1. Inyectar CSS de Leaflet de forma segura
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
 
-const RECTANGULO_BOUNDS = [
-  [BOUNDING_BOX_GENERAL.sur, BOUNDING_BOX_GENERAL.oeste],
-  [BOUNDING_BOX_GENERAL.norte, BOUNDING_BOX_GENERAL.este],
-];
+    // 2. Controlar la carga del JS de Leaflet con polling
+    const cargarLeaflet = () => {
+      if (window.L) {
+        initMap();
+        return;
+      }
 
-function colorEstado(estado) {
-  if (estado === "libre") return "#1e8f4e";
-  if (estado === "ocupado") return "#c0392b";
-  return "#7a7a7a";
-}
+      if (!document.getElementById('leaflet-js')) {
+        const script = document.createElement('script');
+        script.id = 'leaflet-js';
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.async = true;
+        script.onload = () => initMap();
+        document.body.appendChild(script);
+      } else {
+        const interval = setInterval(() => {
+          if (window.L) {
+            clearInterval(interval);
+            initMap();
+          }
+        }, 100);
+      }
+    };
 
-export default function MapaEstacionamiento({ espacios, espacioSeleccionado }) {
+    cargarLeaflet();
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        markersRef.current = {};
+      }
+    };
+  }, []);
+
+  const initMap = () => {
+    if (!mapContainerRef.current || mapInstanceRef.current || !window.L) return;
+
+    const L = window.L;
+    
+    // Crear el mapa indicando las coordenadas centrales de UTEQ Quevedo
+    const map = L.map(mapContainerRef.current, {
+      center: [-1.012269, -79.468195],
+      zoom: 18,
+      zoomControl: true
+    });
+
+    // Capa visual oscura (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    mapInstanceRef.current = map;
+
+    // Recalcular tamaño del contenedor en React para forzar el renderizado de los tiles
+    setTimeout(() => {
+      map.invalidateSize();
+      actualizarMarcadores();
+    }, 200);
+  };
+
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      actualizarMarcadores();
+    }
+  }, [espacios, espacioSeleccionado]);
+
+  const actualizarMarcadores = () => {
+    const L = window.L;
+    if (!L || !mapInstanceRef.current) return;
+
+    espacios.forEach((e) => {
+      let lat = Number(e.ubicacion?.latitud);
+      let lng = Number(e.ubicacion?.longitud);
+
+      // Coordenadas de respaldo ante valores numéricos no válidos
+      if (isNaN(lat) || !isFinite(lat)) {
+        const num = Number(e.numero) || 1;
+        lat = -1.012269 + (num * 0.00003);
+      }
+      if (isNaN(lng) || !isFinite(lng)) {
+        const colCode = typeof e.columna === 'string' ? e.columna.charCodeAt(0) : (Number(e.columna) || 1);
+        lng = -79.468195 + (colCode * 0.00003);
+      }
+
+      const esLibre = e.estado === 'libre' || e.estado === 'Disponible';
+      const color = esLibre ? '#10b981' : '#f87171';
+      const isSelected = espacioSeleccionado && espacioSeleccionado.id === e.id;
+
+      if (!markersRef.current[e.id]) {
+        const marker = L.circleMarker([lat, lng], {
+          radius: isSelected ? 10 : 6,
+          fillColor: color,
+          color: isSelected ? '#ffffff' : color,
+          weight: isSelected ? 3 : 1,
+          opacity: 1,
+          fillOpacity: 0.8
+        }).addTo(mapInstanceRef.current);
+
+        marker.on('click', () => onSelectEspacio && onSelectEspacio(e));
+        markersRef.current[e.id] = marker;
+      } else {
+        markersRef.current[e.id].setLatLng([lat, lng]);
+        markersRef.current[e.id].setStyle({
+          radius: isSelected ? 10 : 6,
+          fillColor: color,
+          color: isSelected ? '#ffffff' : color,
+          weight: isSelected ? 3 : 1
+        });
+      }
+    });
+  };
+
   return (
-    <div style={estilos.contenedor}>
-      <MapContainer center={CENTRO_MAPA} zoom={19} style={estilos.mapa} scrollWheelZoom={false}>
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {/* Perímetro real del terreno (P1-P2-P3-P4) */}
-        <Polygon positions={PERIMETRO} pathOptions={{ color: "#1e8f4e", weight: 2, fillOpacity: 0.05 }} />
-
-        {/* Bounding box general aproximado */}
-        <Rectangle
-          bounds={RECTANGULO_BOUNDS}
-          pathOptions={{ color: "#3a4750", weight: 1, dashArray: "4", fillOpacity: 0 }}
-        />
-
-        {/* Un marcador por cada espacio, coloreado según su estado */}
-        {espacios.map((espacio) => (
-          <CircleMarker
-            key={espacio.id}
-            center={[espacio.ubicacion.latitud, espacio.ubicacion.longitud]}
-            radius={espacio.id === espacioSeleccionado ? 8 : 4}
-            pathOptions={{
-              color: colorEstado(espacio.estado),
-              fillColor: colorEstado(espacio.estado),
-              fillOpacity: 0.9,
-            }}
-          >
-            <Popup>
-              <strong>{espacio.id}</strong>
-              <br />
-              Estado: {espacio.estado}
-              <br />
-              Distancia: {espacio.distanciaDetectada} cm
-            </Popup>
-          </CircleMarker>
-        ))}
-      </MapContainer>
+    <div style={{ background: '#1b2228', padding: '16px', borderRadius: '12px', marginTop: '20px', border: '1px solid #28323c' }}>
+      <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#8a95a1', textTransform: 'uppercase' }}>
+        Mapa de Geolocalización en Tiempo Real
+      </h3>
+      <div 
+        ref={mapContainerRef} 
+        style={{ width: '100%', height: '360px', borderRadius: '8px', overflow: 'hidden', position: 'relative', zIndex: 1 }} 
+      />
     </div>
   );
 }
-
-const estilos = {
-  contenedor: {
-    borderRadius: 12,
-    overflow: "hidden",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-  },
-  mapa: { width: "100%", height: 360 },
-};
