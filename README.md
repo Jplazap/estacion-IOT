@@ -5,6 +5,10 @@
 <img width="1133" height="572" alt="image" src="https://github.com/user-attachments/assets/8e4c4b8a-ff9d-4545-8fd4-c620c6d95611" />
 <img width="1132" height="601" alt="image" src="https://github.com/user-attachments/assets/5e5e8870-689e-45cf-941f-deea93183c9d" />
 <img width="1126" height="591" alt="image" src="https://github.com/user-attachments/assets/359a53bf-772e-4050-b8e4-d7d75a50a39b" />
+<img width="975" height="469" alt="image" src="https://github.com/user-attachments/assets/a67add27-0a70-4632-bfcc-275b5077721b" />
+<img width="975" height="471" alt="image" src="https://github.com/user-attachments/assets/0ccf29de-60d4-43c2-9634-94d2258ace63" />
+<img width="975" height="469" alt="image" src="https://github.com/user-attachments/assets/d9c0a4bb-6f32-4a60-8c0a-c79bd521d64b" />
+
 
 
 # 🅿️ Estacionamiento Inteligente UTEQ
