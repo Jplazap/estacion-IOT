@@ -1,7 +1,11 @@
 🅿️ Estacionamiento Inteligente UTEQ
 <img width="1360" height="768" alt="image" src="https://github.com/user-attachments/assets/ebd41b0d-2406-4f44-905f-9483440d1ce0" />
-<img width="1360" height="768" alt="image" src="https://github.com/user-attachments/assets/ac3498e5-4ed3-4049-8317-d4f56f5f5cea" />
-<img width="1360" height="768" alt="image" src="https://github.com/user-attachments/assets/04bb2f45-9aa0-43ff-a10a-b1d6951fea93" />
+<img width="1309" height="624" alt="image" src="https://github.com/user-attachments/assets/8d9b054f-376b-4843-b946-8fa9aad180b2" />
+<img width="1034" height="624" alt="image" src="https://github.com/user-attachments/assets/4a2d04ae-4130-478b-999f-0c3650de0c2f" />
+<img width="1133" height="572" alt="image" src="https://github.com/user-attachments/assets/8e4c4b8a-ff9d-4545-8fd4-c620c6d95611" />
+<img width="1132" height="601" alt="image" src="https://github.com/user-attachments/assets/5e5e8870-689e-45cf-941f-deea93183c9d" />
+<img width="1126" height="591" alt="image" src="https://github.com/user-attachments/assets/359a53bf-772e-4050-b8e4-d7d75a50a39b" />
+
 
 # 🅿️ Estacionamiento Inteligente UTEQ
 
